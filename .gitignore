@@ -1,0 +1,5 @@
+node_modules/
+.env
+voices/*.onnx
+voices/*.onnx.json
+.DS_Store

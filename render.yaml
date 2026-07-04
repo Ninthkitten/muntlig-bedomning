@@ -1,0 +1,11 @@
+# Render.com läser denna fil automatiskt ("Blueprint") och sätter upp allt.
+services:
+  - type: web
+    name: muntlig-bedomning
+    runtime: docker
+    plan: starter
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false   # klistras in i Renders gränssnitt, hamnar aldrig i koden
+      - key: ACCESS_CODE
+        sync: false   # åtkomstkoden pilotlärarna får

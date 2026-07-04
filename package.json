@@ -1,0 +1,16 @@
+{
+  "name": "muntlig-bedomning",
+  "version": "0.1.0",
+  "description": "Muntlig övning & bedömning – AI-examinator med bias-medveten formativ återkoppling",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.0",
+    "dotenv": "^16.4.0",
+    "express": "^4.19.0"
+  }
+}

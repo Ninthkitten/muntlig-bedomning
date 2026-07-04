@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Muntlig övning &amp; bedömning</title>
+<style>
+  :root { color-scheme: light; --accent:#4c6ef5; --accent2:#12b886; --bg:#f6f7fb; --card:#ffffff; --ink:#1d2333; --mut:#6b7280; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 22px 10px; }
+  header h1 { margin:0; font-size:19px; }
+  header p { margin:4px 0 0; color:var(--mut); font-size:13px; }
+  .wrap { max-width:860px; margin:0 auto; padding:0 18px 30px; }
+  .card { background:var(--card); border:1px solid #e6e8f0; border-radius:14px; padding:18px; margin-top:14px; box-shadow:0 1px 3px rgba(20,30,60,.05); }
+  label { display:block; font-size:12.5px; font-weight:600; margin:12px 0 4px; }
+  textarea, input[type=text], select { width:100%; border:1px solid #d5d9e4; border-radius:9px; padding:9px 11px; font-size:14px; font-family:inherit; background:#fff; }
+  textarea { min-height:120px; resize:vertical; }
+  .row { display:flex; gap:12px; flex-wrap:wrap; }
+  .row > div { flex:1; min-width:160px; }
+  button { border:none; border-radius:9px; padding:10px 16px; font-size:14px; font-weight:600; cursor:pointer; }
+  .primary { background:var(--accent); color:#fff; }
+  .primary:disabled { opacity:.5; cursor:default; }
+  .ghost { background:#eef0f6; color:var(--ink); }
+  .pill { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; padding:3px 9px; border-radius:20px; background:#e7ecff; color:#3b5bdb; margin-right:6px; }
+  #chat { display:flex; flex-direction:column; gap:10px; max-height:46vh; overflow-y:auto; padding:4px 2px; }
+  .msg { max-width:78%; padding:10px 13px; border-radius:14px; font-size:14.5px; line-height:1.45; white-space:pre-wrap; }
+  .ai { background:#eef1ff; align-self:flex-start; border-bottom-left-radius:4px; }
+  .me { background:#d8f5e9; align-self:flex-end; border-bottom-right-radius:4px; }
+  .sys { align-self:center; color:var(--mut); font-size:12.5px; font-style:italic; }
+  .inputbar { display:flex; gap:8px; margin-top:12px; }
+  .inputbar input { flex:1; }
+  #micBtn { width:46px; font-size:18px; }
+  #micBtn.rec { background:#fa5252; color:#fff; animation:pulse 1.2s infinite; }
+  @keyframes pulse { 50% { opacity:.6; } }
+  .hint { font-size:12px; color:var(--mut); margin-top:8px; }
+  .fb h3 { margin:14px 0 4px; font-size:14px; }
+  .fb .sect { white-space:pre-wrap; font-size:14px; line-height:1.5; }
+  .bias { background:#fff8e6; border:1px solid #ffe1a8; border-radius:10px; padding:12px; margin-top:14px; font-size:13px; }
+  .topbar { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .hidden { display:none !important; }
+  .spin { display:inline-block; width:14px; height:14px; border:2px solid #c3ccf5; border-top-color:var(--accent); border-radius:50%; animation:rot .8s linear infinite; vertical-align:-2px; }
+  @keyframes rot { to { transform:rotate(360deg); } }
+  .toggle { font-size:12.5px; color:var(--mut); display:flex; align-items:center; gap:5px; }
+</style>
+</head>
+<body>
+<header class="wrap">
+  <h1>🎤 Muntlig övning &amp; bedömning <span class="pill">Beta</span></h1>
+  <p>Läraren lägger in material – eleven samtalar med AI:n och får formativ, bias-medveten återkoppling.</p>
+</header>
+
+<div class="wrap">
+
+  <!-- SETUP -->
+  <div class="card" id="setupCard">
+    <strong>Lärarens förberedelse</strong>
+    <label>Material eller ämne (klistra in text, instuderingsfrågor eller beskriv ämnet)</label>
+    <textarea id="material" placeholder="T.ex. 'Fotosyntesen: växter omvandlar solljus, vatten och koldioxid till glukos och syre...' eller bara 'Franska revolutionens orsaker'"></textarea>
+    <div class="row">
+      <div>
+        <label>Nivå</label>
+        <select id="level">
+          <option>Mellanstadiet</option>
+          <option selected>Högstadiet</option>
+          <option>Gymnasiet</option>
+          <option>Högskola/universitet</option>
+          <option>SFI / vuxenutbildning</option>
+        </select>
+      </div>
+      <div>
+        <label>Läge</label>
+        <select id="mode">
+          <option value="ovning" selected>Övning (stöttande, ger ledtrådar)</option>
+          <option value="bedomning">Bedömning (neutral examinator)</option>
+        </select>
+      </div>
+      <div>
+        <label>Språkbakgrund</label>
+        <select id="langbg">
+          <option value="modersmal" selected>Svenska som modersmål</option>
+          <option value="flersprakig">Flerspråkig / svenska som andraspråk</option>
+          <option value="ospec">Vill ej ange</option>
+        </select>
+      </div>
+      <div>
+        <label>Samtalets språk</label>
+        <select id="convLang">
+          <option value="sv" selected>Svenska</option>
+          <option value="en">Engelska</option>
+          <option value="de">Tyska</option>
+        </select>
+      </div>
+      <div>
+        <label>Avslut</label>
+        <select id="endMode">
+          <option value="elev" selected>Eleven avslutar själv</option>
+          <option value="tid">På tid – alla klara samtidigt</option>
+        </select>
+      </div>
+      <div id="timeLimitWrap" class="hidden">
+        <label>Antal minuter</label>
+        <input type="text" id="timeLimit" value="3">
+      </div>
+    </div>
+    <label>Lärarens e-post (valfritt – så kan eleven skicka in underlaget direkt)</label>
+    <input type="text" id="teacherEmail" placeholder="fornamn.efternamn@skolan.se">
+    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="primary" id="startBtn">Starta samtalet →</button>
+      <button class="ghost" id="linkBtn">Skapa elevlänk</button>
+      <span class="hint" id="linkHint" style="margin:0"></span>
+    </div>
+  </div>
+
+  <!-- ELEVVY (öppnas via lärarens länk) -->
+  <div class="card hidden" id="studentCard">
+    <strong id="stTitle">Muntlig övning</strong>
+    <div id="stInfo" style="margin-top:10px;font-size:14px;line-height:1.7"></div>
+    <div id="stMaterialWrap" class="hidden">
+      <label>Vad vill du träna på? (din lärare har lämnat valet till dig)</label>
+      <textarea id="stMaterial" placeholder="T.ex. 'Andra världskrigets orsaker' eller klistra in en text du pluggar på"></textarea>
+    </div>
+    <div style="margin-top:16px">
+      <button class="primary" id="stStartBtn">Starta →</button>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="card hidden" id="chatCard">
+    <div class="topbar">
+      <strong>Dialogen</strong>
+      <div style="display:flex;gap:10px;align-items:center">
+        <label class="toggle" style="margin:0"><input type="checkbox" id="ttsToggle" checked> Läs upp frågorna</label>
+        <button class="ghost" id="endBtn">Avsluta &amp; få återkoppling</button>
+      </div>
+    </div>
+    <div id="chat" style="margin-top:12px"></div>
+    <div class="inputbar">
+      <button class="ghost" id="micBtn" title="Tala">🎙️</button>
+      <input type="text" id="answerInput" placeholder="Skriv ditt svar här – eller tryck på mikrofonen och tala">
+      <button class="primary" id="sendBtn">Skicka</button>
+    </div>
+    <div class="hint" id="micHint"></div>
+  </div>
+
+  <!-- FEEDBACK -->
+  <div class="card hidden fb" id="fbCard">
+    <div class="topbar">
+      <strong>Formativ återkoppling</strong>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="primary" id="mailBtn">Skicka till läraren</button>
+        <button class="ghost" id="downloadBtn">Ladda ner underlag</button>
+        <button class="ghost" id="restartBtn">Ny övning</button>
+      </div>
+    </div>
+    <div id="fbBody" style="margin-top:8px"></div>
+    <div class="bias">
+      <strong>⚖️ Om bedömning och bias:</strong> Innehållsförståelse och resonemang bedöms här <em>separat</em> från språklig form. För flerspråkiga elever ska uttal, ordval eller grammatiska avvikelser inte sänka bedömningen av ämneskunskaper. Denna tjänst redovisar de två dimensionerna var för sig – ett underlag för läraren, aldrig ett automatiskt betyg.
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  let history = [];   // {role:'ai'|'me', text}
+  let busy = false;
+  let lastFeedback = '';   // sparas för nedladdning
+  let serverTts = false;   // sätts via /status – annars systemröst
+
+  // ---- restore saved material ----
+  try {
+    const saved = JSON.parse(localStorage.getItem('mb_setup')||'null');
+    if (saved) { $('material').value = saved.material||''; $('level').value = saved.level; $('mode').value = saved.mode; $('langbg').value = saved.langbg; $('teacherEmail').value = saved.teacherEmail||''; $('convLang').value = saved.convLang||'sv'; }
+  } catch(e){}
+
+  function currentSetup(){
+    return { material:$('material').value, level:$('level').value, mode:$('mode').value, langbg:$('langbg').value, teacherEmail:$('teacherEmail').value, convLang:$('convLang').value };
+  }
+
+  // Språkkoder för taligenkänning och systemröster
+  const LANG_CODES = { sv:'sv-SE', en:'en-US', de:'de-DE' };
+  function convLang(){ return $('convLang').value || 'sv'; }
+
+  // ---- elevläge: lärarens inställningar kan ligga inbakade i länken ----
+  let studentCfg = null;
+  try {
+    const m = location.hash.match(/cfg=([^&]+)/);
+    if (m) studentCfg = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1])))));
+  } catch(e){ console.warn('Kunde inte läsa elevlänken', e); }
+
+  function endSettings(){
+    if (studentCfg) return { mode: studentCfg.endMode || 'elev', min: +studentCfg.timeLimit || 3 };
+    return { mode: $('endMode').value, min: +($('timeLimit').value) || 3 };
+  }
+
+  if (studentCfg) {
+    if (studentCfg.code) localStorage.setItem('mb_code', studentCfg.code);
+    // Fyll de (dolda) fälten så att resten av appen fungerar som vanligt
+    $('material').value = studentCfg.material || '';
+    $('level').value = studentCfg.level || 'Högstadiet';
+    $('mode').value = studentCfg.mode || 'ovning';
+    $('langbg').value = studentCfg.langbg || 'ospec';
+    $('convLang').value = studentCfg.convLang || 'sv';
+    $('teacherEmail').value = studentCfg.teacherEmail || '';
+
+    // Visa elevvyn istället för lärarens formulär
+    $('setupCard').classList.add('hidden');
+    $('studentCard').classList.remove('hidden');
+    const lage = ($('mode').value === 'ovning') ? 'övning' : 'bedömning';
+    $('stTitle').textContent = 'Muntlig ' + lage;
+    const langName = { sv:'svenska', en:'engelska', de:'tyska' }[$('convLang').value] || 'svenska';
+    const amne = ($('material').value || '').trim();
+    const es = endSettings();
+    $('stInfo').innerHTML =
+      'Din lärare har förberett en muntlig <strong>' + lage + '</strong>.<br>' +
+      (amne ? 'Ämne: <strong>' + amne.slice(0,80).replace(/</g,'&lt;') + (amne.length > 80 ? '…' : '') + '</strong><br>' : '') +
+      'Språk: ' + langName + ' · Nivå: ' + $('level').value +
+      (es.mode === 'tid' ? '<br>⏱ Du har <strong>' + es.min + ' minuter</strong> på dig – svara på så många frågor du hinner.' : '<br>Du avslutar själv när du känner dig klar.');
+    if (!amne) $('stMaterialWrap').classList.remove('hidden');
+  }
+
+  // ---- backend ----
+  // Åtkomstkod (används bara när servern kräver det, t.ex. hostad version)
+  function accessCode(){ return localStorage.getItem('mb_code') || ''; }
+  function apiHeaders(){
+    const h = { 'Content-Type':'application/json' };
+    const c = accessCode();
+    if (c) h['x-access-code'] = c;
+    return h;
+  }
+
+  async function api(path, body, retried){
+    const r = await fetch(path, {
+      method:'POST',
+      headers: apiHeaders(),
+      body: JSON.stringify(body)
+    });
+    if (r.status === 401 && !retried) {
+      const c = prompt('Den här tjänsten kräver en åtkomstkod. Skriv koden du har fått:');
+      if (c) { localStorage.setItem('mb_code', c.trim()); return api(path, body, true); }
+    }
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || ('Serverfel (' + r.status + ')'));
+    return data;
+  }
+
+  // Visa banner om API-nyckel saknas på servern
+  fetch('/status').then(r=>r.json()).then(s => {
+    serverTts = !!s.tts;
+    if (!s.api) {
+      const banner = document.createElement('div');
+      banner.className = 'bias';
+      banner.style.margin = '14px auto 0';
+      banner.style.maxWidth = '860px';
+      banner.innerHTML = '<strong>🔑 API-nyckel saknas:</strong> servern har ingen ANTHROPIC_API_KEY. Kopiera <code>.env.example</code> till <code>.env</code>, lägg in nyckeln och starta om servern.';
+      document.querySelector('header').after(banner);
+    }
+  }).catch(()=>{});
+
+  function addMsg(role, text){
+    const d = document.createElement('div');
+    d.className = 'msg ' + role;
+    d.textContent = text;
+    $('chat').appendChild(d);
+    $('chat').scrollTop = $('chat').scrollHeight;
+    if (role !== 'sys') history.push({role, text});
+    return d;
+  }
+
+  // ---- TTS: Piper via servern, annars bästa systemröst för språket ----
+  function systemVoiceFor(lang){
+    if (!window.speechSynthesis) return null;
+    const prefix = (lang||'sv').toLowerCase();
+    const vs = speechSynthesis.getVoices().filter(v => (v.lang||'').toLowerCase().startsWith(prefix));
+    if (!vs.length) return null;
+    const score = v => /premium/i.test(v.name) ? 3 : /enhanced|förbättrad/i.test(v.name) ? 2 : /siri/i.test(v.name) ? 2 : 1;
+    vs.sort((a,b) => score(b) - score(a));
+    return vs[0];
+  }
+  if (window.speechSynthesis) speechSynthesis.getVoices(); // trigga async-laddning
+
+  let currentAudio = null;
+  function stopSpeech(){
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    if (window.speechSynthesis) speechSynthesis.cancel();
+  }
+
+  function speakSystem(text){
+    if (!window.speechSynthesis) return;
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = LANG_CODES[convLang()] || 'sv-SE'; u.rate = 1.0;
+      const v = systemVoiceFor(convLang());
+      if (v) u.voice = v;
+      speechSynthesis.speak(u);
+    } catch(e){}
+  }
+
+  async function speak(text){
+    if (!$('ttsToggle').checked) return;
+    stopSpeech();
+    if (serverTts) {
+      try {
+        const r = await fetch('/tts', { method:'POST', headers: apiHeaders(), body: JSON.stringify({ text, lang: convLang() }) });
+        if (r.ok) {
+          const blob = await r.blob();
+          currentAudio = new Audio(URL.createObjectURL(blob));
+          currentAudio.play();
+          return;
+        }
+      } catch(e){}
+      // 503 = ingen Piper-röst för språket → systemröst för just detta anrop
+    }
+    speakSystem(text);
+  }
+
+  // ---- examinatorns nästa fråga ----
+  async function nextQuestion(){
+    busy = true; $('sendBtn').disabled = true;
+    const w = addMsg('sys','Examinatorn funderar…');
+    try {
+      const data = await api('/chat', { setup: currentSetup(), history });
+      w.remove();
+      addMsg('ai', data.reply);
+      speak(data.reply);
+    } catch(e){
+      w.remove();
+      addMsg('sys','Kunde inte nå AI:n: ' + (e.message||e) + ' — tryck Skicka igen för nytt försök.');
+    }
+    busy = false; $('sendBtn').disabled = false;
+  }
+
+  // ---- timer (läge "på tid") ----
+  let timerId = null;
+  function stopTimer(){
+    if (timerId) { clearInterval(timerId); timerId = null; }
+    const t = document.getElementById('timerEl');
+    if (t) t.remove();
+  }
+  function startTimer(minutes){
+    stopTimer();
+    $('endBtn').classList.add('hidden');   // alla blir klara samtidigt
+    const t = document.createElement('strong');
+    t.id = 'timerEl';
+    t.style.fontSize = '15px';
+    $('endBtn').parentNode.appendChild(t);
+    const end = Date.now() + minutes * 60 * 1000;
+    const tick = () => {
+      const left = Math.max(0, end - Date.now());
+      const mm = Math.floor(left / 60000), ss = Math.floor((left % 60000) / 1000);
+      t.textContent = '⏱ ' + mm + ':' + String(ss).padStart(2, '0');
+      t.style.color = left < 30000 ? '#fa5252' : 'inherit';
+      if (left <= 0) { stopTimer(); addMsg('sys', 'Tiden är ute!'); finish(true); }
+    };
+    tick();
+    timerId = setInterval(tick, 250);
+  }
+
+  // ---- start (gemensam för lärare och elev) ----
+  async function startConversation(){
+    if (!$('material').value.trim()) return;
+    if (!studentCfg) localStorage.setItem('mb_setup', JSON.stringify(currentSetup()));
+    history = [];
+    if (SR && window.isSecureContext) {
+      if (recording) { try { rec.stop(); } catch(e){} }
+      rec = makeRec(LANG_CODES[convLang()] || 'sv-SE');   // ny igenkännare på rätt språk
+      $('micHint').textContent = 'Tips: tryck på 🎙️ och tala – klicka igen för att stoppa.';
+    }
+    $('chat').innerHTML = '';
+    $('setupCard').classList.add('hidden');
+    $('studentCard').classList.add('hidden');
+    $('fbCard').classList.add('hidden');
+    $('chatCard').classList.remove('hidden');
+    const es = endSettings();
+    if (es.mode === 'tid') startTimer(es.min);
+    else { stopTimer(); $('endBtn').classList.remove('hidden'); }
+    await nextQuestion();
+    $('answerInput').focus();
+  }
+
+  $('startBtn').onclick = () => {
+    if (!$('material').value.trim()) { $('material').focus(); return; }
+    startConversation();
+  };
+
+  $('endMode').onchange = () => {
+    $('timeLimitWrap').classList.toggle('hidden', $('endMode').value !== 'tid');
+  };
+
+  $('stStartBtn').onclick = () => {
+    if (!$('material').value.trim()) {
+      const own = ($('stMaterial').value || '').trim();
+      if (!own) { $('stMaterial').focus(); return; }
+      $('material').value = own;
+    }
+    startConversation();
+  };
+
+  // ---- skapa elevlänk (lärare) ----
+  $('linkBtn').onclick = async () => {
+    if (!$('material').value.trim() && !confirm('Materialrutan är tom – eleven får då välja ämne själv. Skapa länken ändå?')) return;
+    localStorage.setItem('mb_setup', JSON.stringify(currentSetup()));
+    const cfg = { ...currentSetup(), endMode: $('endMode').value, timeLimit: +($('timeLimit').value) || 3 };
+    if (accessCode()) cfg.code = accessCode();   // eleverna ska slippa skriva koden
+    let base = location.origin;
+    if (/^http:\/\/(localhost|127\.)/.test(base)) {
+      // Sitter läraren på localhost: använd nätverksadressen så länken
+      // fungerar på elevdatorer. På en publik adress används den som den är.
+      try {
+        const s = await fetch('/status').then(r => r.json());
+        if (s.lanUrl) base = s.lanUrl;
+      } catch(e){}
+    }
+    const link = base + '/#cfg=' + encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(cfg)))));
+    try {
+      await navigator.clipboard.writeText(link);
+      $('linkHint').textContent = '✓ Elevlänk kopierad! Klistra in i Classroom, Teams eller mejl.';
+    } catch(e) {
+      $('linkHint').textContent = link;   // visa länken om urklipp inte är tillåtet
+    }
+  };
+
+  // ---- send answer ----
+  async function send(){
+    const t = $('answerInput').value.trim();
+    if (!t || busy) return;
+    $('answerInput').value = '';
+    addMsg('me', t);
+    await nextQuestion();
+  }
+  $('sendBtn').onclick = send;
+  $('answerInput').addEventListener('keydown', e => { if (e.key==='Enter') send(); });
+
+  // ---- speech recognition (feature-detected) ----
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let rec = null, recording = false;
+
+  function makeRec(langCode){
+    const r = new SR();
+    r.lang = langCode; r.interimResults = true; r.continuous = true;
+    r.onresult = e => {
+      let txt = '';
+      for (const res of e.results) txt += res[0].transcript;
+      $('answerInput').value = txt;
+    };
+    r.onend = () => { recording = false; $('micBtn').classList.remove('rec'); };
+    r.onerror = e => {
+      recording = false; $('micBtn').classList.remove('rec');
+      const code = e.error || 'okänt';
+      if (code === 'language-not-supported' && langCode.includes('-')) {
+        // Prova den korta språkkoden (t.ex. "en" istället för "en-US")
+        rec = makeRec(langCode.split('-')[0]);
+        $('micHint').textContent = 'Chrome nekade språket "' + langCode + '" – provar "' + langCode.split('-')[0] + '". Tryck på 🎙️ igen.';
+        return;
+      }
+      const msgs = {
+        'not-allowed': 'Mikrofonen är blockerad – tillåt mikrofon för sidan (klicka på ikonen till vänster i adressfältet).',
+        'language-not-supported': 'Chrome stöder inte taligenkänning på detta språk på den här datorn (' + langCode + ').',
+        'network': 'Nätverksfel – taligenkänningen behöver internet.',
+        'no-speech': 'Ingen röst hördes – prova igen.',
+        'audio-capture': 'Ingen mikrofon hittades.',
+        'aborted': ''
+      };
+      $('micHint').textContent = (msgs[code] !== undefined ? msgs[code] : 'Taligenkänningen fungerade inte (fel: ' + code + ') – skriv ditt svar istället.');
+    };
+    return r;
+  }
+
+  if (SR && !window.isSecureContext) {
+    // http på nätverksadress (t.ex. elevlänk) – Chrome blockerar mikrofonen helt
+    $('micBtn').classList.add('hidden');
+    $('micHint').textContent = 'På den här adressen tillåter webbläsaren ingen mikrofon – skriv dina svar i rutan istället.';
+  } else if (SR) {
+    $('micHint').textContent = 'Tips: tryck på 🎙️ och tala – klicka igen för att stoppa.';
+    rec = makeRec('sv-SE');
+    $('micBtn').onclick = () => {
+      if (recording) { rec.stop(); }
+      else { try { rec.start(); recording = true; $('micBtn').classList.add('rec'); } catch(e){} }
+    };
+  } else {
+    $('micBtn').classList.add('hidden');
+    $('micHint').textContent = 'Taligenkänning stöds inte i den här webbläsaren – skriv dina svar. (Bäst stöd: Chrome.)';
+  }
+
+  // ---- feedback ----
+  async function finish(auto){
+    if (!auto && history.filter(m=>m.role==='me').length === 0) { addMsg('sys','Svara på minst en fråga först.'); return; }
+    stopTimer();
+    if (rec && recording) rec.stop();
+    stopSpeech();
+    $('chatCard').classList.add('hidden');
+    $('fbCard').classList.remove('hidden');
+    if (history.filter(m=>m.role==='me').length === 0) {
+      $('fbBody').textContent = 'Tiden tog slut innan något svar hanns med, så ingen återkoppling kunde skapas. Prova igen!';
+      return;
+    }
+    $('fbBody').innerHTML = '<span class="spin"></span> Sammanställer återkoppling…';
+    try {
+      const data = await api('/feedback', { setup: currentSetup(), history });
+      lastFeedback = data.feedback;
+      const parts = data.feedback.split(/\n(?=[A-ZÅÄÖ][A-ZÅÄÖ ()]+:)/).filter(s=>s.trim());
+      $('fbBody').innerHTML = '';
+      const frag = document.createDocumentFragment();
+      for (const p of parts) {
+        const i = p.indexOf(':');
+        const h = document.createElement('h3'); h.textContent = i>0 ? p.slice(0,i) : 'Återkoppling';
+        const b = document.createElement('div'); b.className='sect'; b.textContent = (i>0 ? p.slice(i+1) : p).trim();
+        frag.appendChild(h); frag.appendChild(b);
+      }
+      $('fbBody').appendChild(frag);
+      const meta = document.createElement('p');
+      meta.className='hint';
+      meta.textContent = 'Underlag: ' + history.filter(m=>m.role==='me').length + ' elevsvar · Läge: ' + ($('mode').value==='ovning'?'Övning':'Bedömning') + ' · ' + $('level').value;
+      $('fbBody').appendChild(meta);
+    } catch(e){
+      $('fbBody').textContent = 'Kunde inte generera återkoppling: ' + (e.message||e);
+    }
+  }
+
+  $('endBtn').onclick = () => finish(false);
+
+  $('restartBtn').onclick = () => {
+    $('fbCard').classList.add('hidden');
+    // Elever kommer tillbaka till sin startvy, läraren till formuläret
+    $(studentCfg ? 'studentCard' : 'setupCard').classList.remove('hidden');
+  };
+
+  // ---- underlag: samma text för nedladdning och mejl ----
+  function buildUnderlag(){
+    const datum = new Date().toISOString().slice(0,10);
+    const lage = $('mode').value==='ovning' ? 'Övning' : 'Bedömning';
+    const doc =
+      'UNDERLAG – MUNTLIG ' + lage.toUpperCase() + '\n' +
+      'Datum: ' + datum + '\n' +
+      'Nivå: ' + $('level').value + '\n' +
+      'Ämne/material: ' + $('material').value.trim().slice(0,200) + '\n' +
+      '\n════════ SAMTALET ════════\n\n' +
+      history.map(m => (m.role==='ai' ? 'Examinator: ' : 'Elev: ') + m.text).join('\n\n') +
+      '\n\n════════ FORMATIV ÅTERKOPPLING ════════\n\n' +
+      lastFeedback + '\n\n' +
+      '─────\nOm bedömning och bias: Innehållsförståelse och resonemang bedöms separat från språklig form. ' +
+      'Detta är ett underlag för läraren – inget automatiskt betyg.\n';
+    return { doc, datum, lage };
+  }
+
+  $('downloadBtn').onclick = () => {
+    if (!lastFeedback) return;
+    const { doc, datum, lage } = buildUnderlag();
+    const blob = new Blob([doc], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'underlag-' + lage.toLowerCase() + '-' + datum + '.txt';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  // ---- skicka till läraren: öppnar Gmail i ny flik med allt ifyllt ----
+  $('mailBtn').onclick = () => {
+    if (!lastFeedback) return;
+    const { doc, datum, lage } = buildUnderlag();
+    const to = ($('teacherEmail').value || '').trim();
+    const subject = 'Underlag muntlig ' + lage.toLowerCase() + ' – ' + datum;
+    let body = doc;
+    // Förifyllda mejl har längdgränser – korta ner om det behövs
+    if (body.length > 1500) {
+      body =
+        'Hej!\n\nHär är min återkoppling från den muntliga ' + lage.toLowerCase() + 'en (' + datum + ').\n\n' +
+        '════════ FORMATIV ÅTERKOPPLING ════════\n\n' + lastFeedback + '\n\n' +
+        'Hela samtalet finns i filen "underlag-' + lage.toLowerCase() + '-' + datum +
+        '.txt" som just laddades ner (ligger i Hämtade filer) – bifoga den gärna.\n';
+      $('downloadBtn').click();   // se till att eleven har filen att bifoga
+    }
+    const gmail = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(to) +
+      '&su=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    window.open(gmail, '_blank', 'noopener');
+
+    let fb = $('mailFallback');
+    if (!fb) {
+      fb = document.createElement('p');
+      fb.id = 'mailFallback';
+      fb.className = 'hint';
+      $('fbBody').parentNode.insertBefore(fb, $('fbBody'));
+    }
+    fb.textContent = 'Gmail öppnades i en ny flik med underlaget ifyllt – kontrollera mottagare och tryck Skicka. Använder skolan ett annat mejlprogram: ladda ner underlaget och bifoga det.';
+  };
+})();
+</script>
+</body>
+</html>
