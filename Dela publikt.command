@@ -13,7 +13,7 @@ echo "Skapar publik adress (tar ca 10 sekunder)..."
 LOG=$(mktemp)
 cloudflared tunnel --url http://localhost:3000 > "$LOG" 2>&1 &
 TUNNEL_PID=$!
-trap 'kill $TUNNEL_PID 2>/dev/null' EXIT
+trap 'kill $TUNNEL_PID 2>/dev/null; rm -f .tunnel-url' EXIT
 
 URL=""
 for i in $(seq 1 30); do
@@ -26,6 +26,10 @@ if [ -z "$URL" ]; then
   echo "Kunde inte skapa en publik adress – kontrollera internetanslutningen och prova igen."
   exit 1
 fi
+
+# Berätta för servern vilken publik adress som gäller – elevlänkar
+# som skapas medan delningen är igång använder då den (med mikrofon).
+printf '%s' "$URL" > .tunnel-url
 
 clear
 echo "════════════════════════════════════════════════════════"

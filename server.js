@@ -43,9 +43,12 @@ function convLangName(lang) {
   return CONV_LANGS[lang] || CONV_LANGS.sv;
 }
 
-function setupText({ material, level, mode, convLang }) {
+function setupText({ material, criteria, level, mode, convLang }) {
   return (
     'Material/ämne: """' + (material || '').trim() + '"""\n' +
+    ((criteria || '').trim()
+      ? 'Lärarens bedömningskriterier (t.ex. från Skolverket): """' + criteria.trim() + '"""\n'
+      : '') +
     'Nivå: ' + level + '\n' +
     'Samtalets språk: ' + convLangName(convLang) + '\n' +
     'Läge: ' + (mode === 'ovning'
@@ -163,12 +166,17 @@ app.post('/feedback', async (req, res) => {
         : '. ') +
       langNote;
 
+    const hasCriteria = !!(setup.criteria || '').trim();
     const prompt =
       setupText(setup) +
       '\n\nSamtalet:\n' + convo + '\n\n' +
       'Svara på svenska med EXAKT dessa fyra rubriker, var och en på egen rad följd av 2–4 meningar:\n' +
       'INNEHÅLL OCH FÖRSTÅELSE:\nRESONEMANG OCH FÖRDJUPNING:\nSPRÅKLIG FRAMSTÄLLNING (separat från innehåll):\nNÄSTA STEG:\n' +
-      'Var konkret, uppmuntrande och peka på exempel ur samtalet. Sätt INGET betyg.';
+      'Var konkret, uppmuntrande och peka på exempel ur samtalet. ' +
+      (hasCriteria
+        ? 'Relatera INNEHÅLL och RESONEMANG till lärarens bedömningskriterier: beskriv vad i samtalet som visar vad i kriterierna, och vad som ännu inte syntes. '
+        : '') +
+      'Sätt INGET betyg, ange ingen betygsbokstav och påstå ALDRIG att eleven "klarat" en nivå, ett betygssteg eller ett kriterium – beskriv vad samtalet visar, tolkningen är lärarens.';
 
     // Återkopplingen får gärna vara genomtänkt – adaptivt tänkande är på
     // som standard, så max_tokens behöver rymma både tanke och svar.
@@ -253,10 +261,22 @@ function lanUrl() {
   return null;
 }
 
+// Publik https-adress när "Dela publikt" är igång (skrivs av skriptet).
+function publicUrl() {
+  const f = path.join(__dirname, '.tunnel-url');
+  try {
+    if (existsSync(f)) {
+      const u = readFileSync(f, 'utf8').trim();
+      if (/^https:\/\//.test(u)) return u;
+    }
+  } catch {}
+  return null;
+}
+
 // Statusinfo till frontend (visar t.ex. om API-nyckel saknas).
 app.get('/status', async (_req, res) => {
   const langs = await ttsLangs();
-  res.json({ api: !!anthropic, tts: !!langs.sv, ttsLangs: langs, model: MODEL, lanUrl: lanUrl() });
+  res.json({ api: !!anthropic, tts: !!langs.sv, ttsLangs: langs, model: MODEL, lanUrl: lanUrl(), publicUrl: publicUrl() });
 });
 
 app.listen(PORT, () => {
