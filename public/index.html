@@ -63,26 +63,24 @@
       <div>
         <label>Nivå</label>
         <select id="level">
-          <option>Mellanstadiet</option>
-          <option selected>Högstadiet</option>
-          <option>Gymnasiet</option>
-          <option>Högskola/universitet</option>
-          <option>SFI / vuxenutbildning</option>
+          <option value="Årskurs 4–6">4–6</option>
+          <option value="Årskurs 7–9" selected>7–9</option>
+          <option value="Gymnasiet">Gymnasiet</option>
+          <option value="Vuxenutbildning">Vuxenutbildning</option>
         </select>
       </div>
       <div>
         <label>Läge</label>
         <select id="mode">
-          <option value="ovning" selected>Övning (stöttande, ger ledtrådar)</option>
-          <option value="bedomning">Bedömning (neutral examinator)</option>
+          <option value="ovning" selected>Öva</option>
+          <option value="bedomning">Bedöma</option>
         </select>
       </div>
       <div>
-        <label>Språkbakgrund</label>
+        <label>Språk</label>
         <select id="langbg">
-          <option value="modersmal" selected>Svenska som modersmål</option>
-          <option value="flersprakig">Flerspråkig / svenska som andraspråk</option>
-          <option value="ospec">Vill ej ange</option>
+          <option value="modersmal" selected>Svenska</option>
+          <option value="flersprakig">Svenska som andraspråk</option>
         </select>
       </div>
       <div>
@@ -209,9 +207,9 @@
     // Fyll de (dolda) fälten så att resten av appen fungerar som vanligt
     $('material').value = studentCfg.material || '';
     $('criteria').value = studentCfg.criteria || '';
-    $('level').value = studentCfg.level || 'Högstadiet';
+    $('level').value = studentCfg.level || 'Årskurs 7–9';
     $('mode').value = studentCfg.mode || 'ovning';
-    $('langbg').value = studentCfg.langbg || 'ospec';
+    $('langbg').value = studentCfg.langbg || 'modersmal';
     $('convLang').value = studentCfg.convLang || 'sv';
     $('teacherEmail').value = studentCfg.teacherEmail || '';
 
