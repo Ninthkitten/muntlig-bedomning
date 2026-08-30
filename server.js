@@ -215,7 +215,10 @@ async function checkPiperBin() {
 }
 
 // Vilka språk har både Piper och en röstfil?
+// DISABLE_TTS=true (t.ex. på Render, där CPU:n är för klen för Piper) stänger av
+// serverrösten helt – webbläsarens systemröst tar då över automatiskt.
 async function ttsLangs() {
+  if (String(process.env.DISABLE_TTS || '').toLowerCase() === 'true') return {};
   if (!(await checkPiperBin())) return {};
   const out = {};
   for (const [lang, voice] of Object.entries(PIPER_VOICES)) out[lang] = existsSync(voice);
