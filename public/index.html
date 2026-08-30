@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Muntlig övning &amp; bedömning</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1f7a5c">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Muntligt">
 <style>
   :root { color-scheme: light; --accent:#4c6ef5; --accent2:#12b886; --bg:#f6f7fb; --card:#ffffff; --ink:#1d2333; --mut:#6b7280; }
   * { box-sizing:border-box; }
@@ -655,5 +660,6 @@
   };
 })();
 </script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});</script>
 </body>
 </html>

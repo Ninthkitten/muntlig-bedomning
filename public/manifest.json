@@ -1,0 +1,14 @@
+{
+  "name": "Muntlig övning & bedömning",
+  "short_name": "Muntligt",
+  "description": "Öva och bedöm muntlig framställning i samtal med en AI-examinator – svenska, engelska och tyska.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#134e3a",
+  "theme_color": "#1f7a5c",
+  "lang": "sv",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
