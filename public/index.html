@@ -289,9 +289,12 @@
     const prefix = (lang||'sv').toLowerCase();
     const vs = speechSynthesis.getVoices().filter(v => (v.lang||'').toLowerCase().startsWith(prefix));
     if (!vs.length) return null;
-    const score = v => /premium/i.test(v.name) ? 3 : /enhanced|förbättrad/i.test(v.name) ? 2 : /siri/i.test(v.name) ? 2 : 1;
+    // Apples skämtröster ("Novelty": Albert, Zarvox m.fl.) ska aldrig väljas automatiskt
+    const novelty = /albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|ralph|kathy|eloquence/i;
+    const known = /samantha|ava|zoe|allison|susan|daniel|karen|moira|tessa|serena|alva|klara|oskar|anna|petra|markus|viktor/i;
+    const score = v => /premium/i.test(v.name) ? 5 : /enhanced|förbättrad/i.test(v.name) ? 4 : known.test(v.name) ? 3 : novelty.test(v.name) ? 0 : 1;
     vs.sort((a,b) => score(b) - score(a));
-    return vs[0];
+    return score(vs[0]) > 0 ? vs[0] : vs[0];
   }
   if (window.speechSynthesis) speechSynthesis.getVoices(); // trigga async-laddning
 
