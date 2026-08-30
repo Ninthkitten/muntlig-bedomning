@@ -53,7 +53,7 @@ function setupText({ material, criteria, level, mode, convLang }) {
     'Samtalets språk: ' + convLangName(convLang) + '\n' +
     'Läge: ' + (mode === 'ovning'
       ? 'ÖVNING – var stöttande, ge ledtrådar när eleven kör fast.'
-      : 'BEDÖMNING – var neutral och vänlig examinator, ge inga ledtrådar.')
+      : 'BEDÖMNING – var neutral och vänlig samtalsledare, ge inga ledtrådar.')
   );
 }
 
@@ -108,7 +108,7 @@ function requireApi(res) {
   return true;
 }
 
-// ---------- /chat: examinatorns nästa replik ----------
+// ---------- /chat: Claudes nästa replik ----------
 
 app.post('/chat', async (req, res) => {
   if (!requireApi(res)) return;
@@ -121,7 +121,7 @@ app.post('/chat', async (req, res) => {
 
     const lang = convLangName((setup || {}).convLang);
     const system =
-      'Du är en vänlig muntlig examinator i en svensk skola. Du samtalar med en elev om ett material som läraren valt. ' +
+      'Du är Claude, en vänlig samtalsledare vid muntlig övning i en svensk skola. Du samtalar med en elev om ett material som läraren valt. Omnämn dig själv som Claude (aldrig \"examinatorn\" eller \"AI:n\"). ' +
       'Samtalet förs på ' + lang + '. Svara ENDAST med din nästa replik till eleven, på ' + lang + ', max 2–3 meningar, EN fråga i taget. ' +
       'Anpassa språk och svårighetsgrad till nivån.\n\n' +
       setupText(setup) +
@@ -161,7 +161,7 @@ app.post('/feedback', async (req, res) => {
     const langNote = assessLang ? LANG_NOTES.bedoms : LANG_NOTES.bedoms_ej;
 
     const convo = (history || [])
-      .map((m) => (m.role === 'ai' ? 'Examinator: ' : 'Elev: ') + m.text)
+      .map((m) => (m.role === 'ai' ? 'Claude: ' : 'Elev: ') + m.text)
       .join('\n');
 
     const system =
@@ -180,7 +180,7 @@ app.post('/feedback', async (req, res) => {
           'INNEHÅLL OCH FÖRSTÅELSE:\nRESONEMANG OCH FÖRDJUPNING:\nSPRÅKLIG FRAMSTÄLLNING (separat från innehåll):\nNÄSTA STEG:\n'
         : 'Svara på svenska med EXAKT dessa tre rubriker, var och en på egen rad följd av 2–4 meningar:\n' +
           'INNEHÅLL OCH FÖRSTÅELSE:\nRESONEMANG OCH FÖRDJUPNING:\nNÄSTA STEG:\n') +
-      'Var konkret, uppmuntrande och peka på exempel ur samtalet. ' +
+      'Var konkret, uppmuntrande och peka på exempel ur samtalet. Samtalsparten i dialogen är Claude – skriv \"Claude\" när du refererar till den (aldrig \"examinatorn\"). ' +
       (hasCriteria
         ? (assessLang
           ? 'Relatera INNEHÅLL, RESONEMANG och SPRÅKLIG FRAMSTÄLLNING till lärarens bedömningskriterier (inklusive eventuella språkkriterier): beskriv vad i samtalet som visar vad i kriterierna, och vad som ännu inte syntes. '

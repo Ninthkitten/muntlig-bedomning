@@ -339,7 +339,7 @@
     speakSystem(text);
   }
 
-  // ---- examinatorns nästa fråga ----
+  // ---- Claudes nästa fråga ----
   async function nextQuestion(){
     // Under 30 sekunder kvar: ingen ny fråga – avrunda snyggt istället
     if (timeLeft() < 30000) {
@@ -607,7 +607,7 @@
       'Ämne/material: ' + $('material').value.trim().slice(0,200) + '\n' +
       ($('criteria').value.trim() ? 'Bedömningskriterier: ' + $('criteria').value.trim() + '\n' : '') +
       '\n════════ SAMTALET ════════\n\n' +
-      history.map(m => (m.role==='ai' ? 'Examinator: ' : 'Elev: ') + m.text).join('\n\n') +
+      history.map(m => (m.role==='ai' ? 'Claude: ' : 'Elev: ') + m.text).join('\n\n') +
       '\n\n════════ FORMATIV ÅTERKOPPLING ════════\n\n' +
       lastFeedback + '\n\n' +
       '─────\nOm bedömning och bias: Innehållsförståelse och resonemang bedöms separat från språklig form. ' +
