@@ -57,11 +57,15 @@ function setupText({ material, criteria, level, mode, convLang }) {
   );
 }
 
+// Bedöms språket? (gamla värden modersmal/flersprakig mappas för äldre elevlänkar)
+function assessLanguage(langbg) {
+  return langbg !== 'sprak_ej';
+}
 const LANG_NOTES = {
-  modersmal: 'Eleven talar samtalets språk som modersmål.',
-  flersprakig:
-    'Samtalets språk är inte elevens modersmål (eleven är flerspråkig). Bedöm ämnesinnehåll och resonemang HELT SKILT från språklig form. Språkliga avvikelser får inte påverka innehållsbedömningen.',
-  ospec: 'Språkbakgrund ej angiven. Bedöm ändå innehåll och språk separat.'
+  bedoms:
+    'Bedöm ämnesinnehåll och resonemang HELT SKILT från språklig form. Språkliga avvikelser får aldrig påverka innehållsbedömningen.',
+  bedoms_ej:
+    'Språket BEDÖMS INTE i detta samtal: kommentera inte uttal, ordval eller grammatik. Bedöm enbart ämnesinnehåll och resonemang.'
 };
 
 // Samtalshistorik ({role:'ai'|'me', text}) → Claude-meddelanden.
@@ -153,7 +157,8 @@ app.post('/feedback', async (req, res) => {
     if (!setup || !(history || []).some((m) => m.role === 'me')) {
       return res.status(400).json({ error: 'Samtalet innehåller inga elevsvar.' });
     }
-    const langNote = LANG_NOTES[setup.langbg] || LANG_NOTES.ospec;
+    const assessLang = assessLanguage(setup.langbg);
+    const langNote = assessLang ? LANG_NOTES.bedoms : LANG_NOTES.bedoms_ej;
 
     const convo = (history || [])
       .map((m) => (m.role === 'ai' ? 'Examinator: ' : 'Elev: ') + m.text)
@@ -170,11 +175,16 @@ app.post('/feedback', async (req, res) => {
     const prompt =
       setupText(setup) +
       '\n\nSamtalet:\n' + convo + '\n\n' +
-      'Svara på svenska med EXAKT dessa fyra rubriker, var och en på egen rad följd av 2–4 meningar:\n' +
-      'INNEHÅLL OCH FÖRSTÅELSE:\nRESONEMANG OCH FÖRDJUPNING:\nSPRÅKLIG FRAMSTÄLLNING (separat från innehåll):\nNÄSTA STEG:\n' +
+      (assessLang
+        ? 'Svara på svenska med EXAKT dessa fyra rubriker, var och en på egen rad följd av 2–4 meningar:\n' +
+          'INNEHÅLL OCH FÖRSTÅELSE:\nRESONEMANG OCH FÖRDJUPNING:\nSPRÅKLIG FRAMSTÄLLNING (separat från innehåll):\nNÄSTA STEG:\n'
+        : 'Svara på svenska med EXAKT dessa tre rubriker, var och en på egen rad följd av 2–4 meningar:\n' +
+          'INNEHÅLL OCH FÖRSTÅELSE:\nRESONEMANG OCH FÖRDJUPNING:\nNÄSTA STEG:\n') +
       'Var konkret, uppmuntrande och peka på exempel ur samtalet. ' +
       (hasCriteria
-        ? 'Relatera INNEHÅLL och RESONEMANG till lärarens bedömningskriterier: beskriv vad i samtalet som visar vad i kriterierna, och vad som ännu inte syntes. '
+        ? (assessLang
+          ? 'Relatera INNEHÅLL, RESONEMANG och SPRÅKLIG FRAMSTÄLLNING till lärarens bedömningskriterier (inklusive eventuella språkkriterier): beskriv vad i samtalet som visar vad i kriterierna, och vad som ännu inte syntes. '
+          : 'Relatera INNEHÅLL och RESONEMANG till lärarens bedömningskriterier: beskriv vad i samtalet som visar vad i kriterierna, och vad som ännu inte syntes. Bortse från eventuella språkkriterier – språket bedöms inte. ')
         : '') +
       'Sätt INGET betyg, ange ingen betygsbokstav och påstå ALDRIG att eleven "klarat" en nivå, ett betygssteg eller ett kriterium – beskriv vad samtalet visar, tolkningen är lärarens.';
 

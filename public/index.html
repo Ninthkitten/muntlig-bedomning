@@ -77,10 +77,10 @@
         </select>
       </div>
       <div>
-        <label>Språkbakgrund</label>
+        <label>Språklig framställning</label>
         <select id="langbg">
-          <option value="modersmal" selected>Modersmål</option>
-          <option value="flersprakig">Ej modersmål</option>
+          <option value="bedoms" selected>Språk bedöms</option>
+          <option value="sprak_ej">Språk bedöms ej</option>
         </select>
       </div>
       <div>
@@ -177,8 +177,9 @@
 
   // ---- restore saved material ----
   try {
+    function mapLangbg(v){ return v === 'sprak_ej' ? 'sprak_ej' : 'bedoms'; } // äldre värden (modersmal/flersprakig) ⇒ bedöms
     const saved = JSON.parse(localStorage.getItem('mb_setup')||'null');
-    if (saved) { $('material').value = saved.material||''; $('criteria').value = saved.criteria||''; $('level').value = saved.level; $('mode').value = saved.mode; $('langbg').value = saved.langbg; $('teacherEmail').value = saved.teacherEmail||''; $('convLang').value = saved.convLang||'sv'; }
+    if (saved) { $('material').value = saved.material||''; $('criteria').value = saved.criteria||''; $('level').value = saved.level; $('mode').value = saved.mode; $('langbg').value = mapLangbg(saved.langbg); $('teacherEmail').value = saved.teacherEmail||''; $('convLang').value = saved.convLang||'sv'; }
   } catch(e){}
 
   function currentSetup(){
@@ -209,7 +210,7 @@
     $('criteria').value = studentCfg.criteria || '';
     $('level').value = studentCfg.level || 'Årskurs 7–9';
     $('mode').value = studentCfg.mode || 'ovning';
-    $('langbg').value = studentCfg.langbg || 'modersmal';
+    $('langbg').value = mapLangbg(studentCfg.langbg);
     $('convLang').value = studentCfg.convLang || 'sv';
     $('teacherEmail').value = studentCfg.teacherEmail || '';
 
