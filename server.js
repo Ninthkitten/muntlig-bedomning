@@ -58,9 +58,9 @@ function setupText({ material, criteria, level, mode, convLang }) {
 }
 
 const LANG_NOTES = {
-  modersmal: 'Eleven har svenska som modersmål.',
+  modersmal: 'Eleven talar samtalets språk som modersmål.',
   flersprakig:
-    'Eleven är flerspråkig / har svenska som andraspråk. Bedöm ämnesinnehåll och resonemang HELT SKILT från språklig form. Språkliga avvikelser får inte påverka innehållsbedömningen.',
+    'Samtalets språk är inte elevens modersmål (eleven är flerspråkig). Bedöm ämnesinnehåll och resonemang HELT SKILT från språklig form. Språkliga avvikelser får inte påverka innehållsbedömningen.',
   ospec: 'Språkbakgrund ej angiven. Bedöm ändå innehåll och språk separat.'
 };
 
