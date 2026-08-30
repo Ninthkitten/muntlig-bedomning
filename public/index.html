@@ -344,7 +344,17 @@
       return;
     }
     busy = true; $('sendBtn').disabled = true;
-    const w = addMsg('sys','Examinatorn funderar…');
+    const THINKING = {
+      sv: ['Klurar…','Grunnar…','Vässar pennan…','Väger dina ord på guldvåg…','Bläddrar i tankarna…',
+           'Kokar ihop ett svar…','Låter frågan puttra…','Smakar på ditt svar…','Knåpar ihop en följdfråga…',
+           'Dammar av frågebanken…','Rådfrågar sitt inre lärarrum…','Tänker högt, fast tyst…','Snurrar på tankesnurran…'],
+      en: ['Mulling it over…','Sharpening the pencil…','Weighing your words…','Brewing a follow-up…',
+           'Leafing through thoughts…','Letting it simmer…','Dusting off the question bank…','Thinking out loud, quietly…'],
+      de: ['Grübelt…','Spitzt den Bleistift…','Wägt deine Worte ab…','Braut eine Frage zusammen…',
+           'Blättert in Gedanken…','Lässt es köcheln…','Denkt laut, aber leise…']
+    };
+    const pool = THINKING[convLang()] || THINKING.sv;
+    const w = addMsg('sys', pool[Math.floor(Math.random()*pool.length)]);
     try {
       const data = await api('/chat', { setup: currentSetup(), history });
       w.remove();
