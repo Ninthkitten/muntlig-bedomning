@@ -5,3 +5,7 @@ voices/*.onnx.json
 .DS_Store
 .tunnel-url
 server.log
+Fardplan.md
+Testpass.md
+OVERLAMNING.md
+DEPLOY-RENDER.md
